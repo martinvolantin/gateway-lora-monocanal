@@ -1,35 +1,16 @@
-Single Channel LoRaWAN Gateway
+Gateway LoRa Monocanal
 ==============================
-This repository contains a proof-of-concept implementation of a single
-channel LoRaWAN gateway.
+Este repositorio contiene un ejemplo de un Gateway LoRa Mono-Canal de 915MHz para mi proyecto de Telecomunicaciones
 
-It has been tested on the Raspberry Pi platform, using a Semtech SX1272
-transceiver (HopeRF RFM92W), and SX1276 (HopeRF RFM95W).
+Ha sido probado en la plataforma Raspberry Pi, con el chip SX1276 (HopeRF RFM95W).
 
-The code is for testing and development purposes only, and is not meant
-for production usage.
+Parte de este código ha sido copiado del Semtech Packet Forwarder (con el debido permiso).
 
-Part of the source has been copied from the Semtech Packet Forwarder
-(with permission).
+Primero fue bifurcado de @jlesech https://github.com/tftelkamp/single_chan_pkt_fwd to add json configuration file    
+Y luego bifurcado por  @hallard https://github.com/hallard/single_chan_pkt_fwd
+Para luego ser bifurcado por @martinvolantin https://github.com/martinvolantin/
 
-Maintainer: Thomas Telkamp <thomas@telkamp.eu>
-
-Was forked by @jlesech https://github.com/tftelkamp/single_chan_pkt_fwd to add json configuration file    
-then forked by @hallard https://github.com/hallard/single_chan_pkt_fwd 
-
-Added new Features
-------------------
-
-- Added support for [Dragino Lora HAT][2] and [LoRasPi][1] (more to come)
-- pin definition are in config file
-- Removed some configuration hard coded in source file and put them into global_conf.json
-- renamed main.cpp to single_chan_pkt_fwd.cpp
-- added single_chan_pkt_fwd.service for systemd (debian jessie minimal) start 
-- added `make install` and `make uninstall` into Makefile to install service
-- added control for On board Led's if any
-
-Raspberry PI pin mapping is as follow and pin number in file `global_conf.json` are WiringPi pin number (wPi colunm)
-
+El mapa de pines es el siguiente y se encuentra en el archivo `global_conf.json`. Las asignaciones siguientes son de la biblioteca Wiringpi.
 
 ```
 root@pi04 # gpio readall
@@ -60,47 +41,16 @@ root@pi04 # gpio readall
 | BCM | wPi |   Name  | Physical | Name    | wPi | BCM |
 +-----+-----+---------+--B Plus--+---------+-----+-----+
 ```
-
-* For [Dragino RPI Lora][2] HAT    
-pins configuration in `global_conf.json`
+* Para configurarlo con la PCB personalizada se deben ajustar en el archivo los siguientes parámetros
 ```
   "pin_nss": 6,
   "pin_dio0": 7,
   "pin_rst": 0
 ```
-
-* For [LoRasPi][1] Shield    
-pins configuration in file `global_conf.json`
-
-```
-  "pin_nss": 8,
-  "pin_dio0": 6,
-  "pin_rst": 3,
-  "pin_led1":4
-```
-
-* For [RPI-Lora-Gateway][3] Shield    
-pins configuration in file `global_conf.json`
-
-```
-Module-1 //have to check in my Pi
-  "pin_nss": 10,
-  "pin_dio0": 6,
-  "pin_rst": 21,
-  "pin_led1": 7
-
-Module-2 //have to check in my Pi
-  "pin_nss": 11,
-  "pin_dio0": 27,
-  "pin_rst": 22,
-  "pin_led1": 1
-
-```
-
-Installation
+Instalación
 ------------
 
-Install dependencies as indicated in original README.md below then
+Las dependencias se instalan de la siguiente manera.
 
 ```shell
 cd /home/pi
@@ -109,50 +59,33 @@ make
 sudo make install
 ````
 
-To start service (should already be started at boot if you done make install and rebooted of course), stop service or look service status
+Para manipular el programa como un servicio mediante systemctl (aunque ya en el paso anterior debe quedar funcionando) se usa el comando
 ```shell
 systemctl start single_chan_pkt_fwd
 systemctl stop single_chan_pkt_fwd
 systemctl status single_chan_pkt_fwd
 ````
 
-To see gateway log in real time
+Para ver la información de debug del gateway en tiempo real se usa el comando
 ```shell
 journalctl -f -u single_chan_pkt_fwd
 ````
 
-Pictures
+Características
 --------
+- Escucha en una frecuencia configurable y un factor de separacion ajustable
+- Desde SF7 hasta SF12
+- Actualizaciones de estado
+- Puede enviar datos a dos servidores
 
-running daemon on Raspberry PI with LoRasPI shield    
-
-<img src="https://raw.githubusercontent.com/hallard/LoRasPI/master/images/LoRasPI-on-Pi.jpg" alt="LoRasPI plugged on PI">
-
-
-
-**Original README.md below**
-
-Features
---------
-- listen on configurable frequency and spreading factor
-- SF7 to SF12
-- status updates
-- can forward to two servers
-
-Not (yet) supported:
-- PACKET_PUSH_ACK processing
-- SF7BW250 modulation
-- FSK modulation
-- downstream messages (tx)
-
-Dependencies
+Dependencias
 ------------
-- SPI needs to be enabled on the Raspberry Pi (use raspi-config)
-- WiringPi: a GPIO access library written in C for the BCM2835
-  used in the Raspberry Pi.
+- Se debe habilitar SPI en la Raspberry Pi (con raspi-config)
+- WiringPi: Una biblioteca escrita en C para controlar el chip BCM2835
+  utilizado en la Raspberry Pi
   sudo apt-get install wiringpi
-  see http://wiringpi.com
-- Run packet forwarder as root
+  Ver http://wiringpi.com
+- Ejecutar como Root
 
 Connections
 -----------
@@ -167,23 +100,19 @@ Connections
 | DIO0   | GPIO7 (pin #7)       |
 | RST    | GPIO0 (pin #11)      |
 
-Configuration
+Configuración
 -------------
 
-Defaults:
+Por defecto:
 
-- LoRa:   SF7 at 868.1 Mhz
-- Server: 54.229.214.112, port 1700  (The Things Network: croft.thethings.girovito.nl)
+- LoRa:   SF7 en 903.9 Mhz
+- Servidor: router.eu.staging.thethings.network, puerto 1700
 
-Edit source node (main.cpp) to change configuration (look for: "Configure these values!").
-
-Please set location, email and description.
-
-License
+Licencia
 -------
-The source files in this repository are made available under the Eclipse Public License v1.0, except:
-- base64 implementation, that has been copied from the Semtech Packet Forwarder;
-- RapidJSON, licensed under the MIT License.
+Los archivos listados en este repositorio se adecúan a la licencia Eclipse Public License v1.0, excepto:
+- La implementación de base64, que fue copiada de Semtech Packet Forwarder;
+- RapidJSON, licenciado bajo la MIT License.
 
 
 [1]: https://github.com/hallard/LoRasPI
